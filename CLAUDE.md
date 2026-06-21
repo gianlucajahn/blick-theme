@@ -1,0 +1,1 @@
+D:/Repositories/blick-shopify/blick-theme/AGENTS.md
