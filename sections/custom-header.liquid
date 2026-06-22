@@ -14,6 +14,10 @@
 
 {%- assign menu = section.settings.menu -%}
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
 <header class="ch{% if section.settings.enable_sticky %} ch--sticky{% endif %}" id="ch-{{ section.id }}">
   <div class="ch__inner">
 
@@ -66,17 +70,19 @@
     </div>
   </div>
 
-  {%- comment -%} Mobiles Dropdown-Menü {%- endcomment -%}
-  <nav class="ch__mobile-nav" aria-label="Mobile Navigation" data-mobile-nav hidden>
-    {%- if menu != blank -%}
-      {%- for link in menu.links -%}
-        <a href="{{ link.url }}" class="ch__mobile-link">{{ link.title }}</a>
-      {%- endfor -%}
-    {%- else -%}
-      <a href="#" class="ch__mobile-link">Shop</a>
-      <a href="#" class="ch__mobile-link">Rezepte</a>
-      <a href="#" class="ch__mobile-link">Über uns</a>
-    {%- endif -%}
+  {%- comment -%} Mobiles Dropdown-Menü (smooth auf-/zuklappend) {%- endcomment -%}
+  <nav class="ch__mobile-nav" aria-label="Mobile Navigation" data-mobile-nav>
+    <div class="ch__mobile-inner">
+      {%- if menu != blank -%}
+        {%- for link in menu.links -%}
+          <a href="{{ link.url }}" class="ch__mobile-link">{{ link.title }}</a>
+        {%- endfor -%}
+      {%- else -%}
+        <a href="#" class="ch__mobile-link">Shop</a>
+        <a href="#" class="ch__mobile-link">Rezepte</a>
+        <a href="#" class="ch__mobile-link">Über uns</a>
+      {%- endif -%}
+    </div>
   </nav>
 </header>
 
@@ -86,6 +92,7 @@
     --ch-border: #ececec;
     background: #fff;
     border-bottom: 1px solid var(--ch-border);
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   }
   #ch-{{ section.id }}.ch--sticky { position: sticky; top: 0; z-index: 50; }
   #ch-{{ section.id }} .ch__inner {
@@ -113,19 +120,33 @@
   #ch-{{ section.id }} .ch__right { display: flex; align-items: center; justify-content: flex-end; gap: 18px; }
   #ch-{{ section.id }} .ch__icon { color: var(--ch-text); position: relative; display: inline-flex; }
   #ch-{{ section.id }} .ch__icon:hover { opacity: .6; }
+  /* Warenkorb-Icon etwas größer */
+  #ch-{{ section.id }} .ch__cart svg { width: 26px; height: 26px; }
+  /* Zähl-Bubble näher am Icon */
   #ch-{{ section.id }} .ch__cart .cart-count-bubble {
-    position: absolute; top: -6px; right: -8px;
+    position: absolute; top: -3px; right: -3px;
     background: var(--ch-text); color: #fff; font-size: 10px; line-height: 1;
-    min-width: 16px; height: 16px; border-radius: 8px;
+    min-width: 15px; height: 15px; border-radius: 8px;
     display: inline-flex; align-items: center; justify-content: center; padding: 0 4px;
   }
   #ch-{{ section.id }} .ch__cart .cart-count-bubble.hidden { display: none; }
 
-  /* mobiles Menü */
+  /* mobiles Menü – smooth auf-/zuklappend via Grid-Höhenanimation */
   #ch-{{ section.id }} .ch__mobile-nav {
-    display: flex; flex-direction: column; border-top: 1px solid var(--ch-border); padding: 8px 24px 16px;
+    display: grid; grid-template-rows: 0fr;
+    transition: grid-template-rows .32s ease;
   }
-  #ch-{{ section.id }} .ch__mobile-link { color: var(--ch-text); text-decoration: none; padding: 12px 0; font-size: 16px; border-bottom: 1px solid var(--ch-border); }
+  #ch-{{ section.id }} .ch__mobile-nav.is-open { grid-template-rows: 1fr; }
+  #ch-{{ section.id }} .ch__mobile-inner {
+    overflow: hidden; min-height: 0;
+    opacity: 0; transition: opacity .25s ease;
+    padding: 0 24px; display: flex; flex-direction: column;
+  }
+  #ch-{{ section.id }} .ch__mobile-nav.is-open .ch__mobile-inner {
+    opacity: 1; border-top: 1px solid var(--ch-border);
+  }
+  #ch-{{ section.id }} .ch__mobile-link { color: var(--ch-text); text-decoration: none; padding: 14px 0; font-size: 16px; border-bottom: 1px solid var(--ch-border); }
+  #ch-{{ section.id }} .ch__mobile-link:last-child { border-bottom: none; }
 
   @media (max-width: 749px) {
     #ch-{{ section.id }} .ch__inner { padding: 14px 18px; }
@@ -134,6 +155,8 @@
     #ch-{{ section.id }} .ch__right { gap: 0; }
     /* Account-Icon auf Mobile ausblenden (Figma zeigt nur Warenkorb) */
     #ch-{{ section.id }} .ch__right .ch__icon:not(.ch__cart) { display: none; }
+    /* Warenkorb-Icon auf Mobile nochmal etwas größer */
+    #ch-{{ section.id }} .ch__cart svg { width: 28px; height: 28px; }
     #ch-{{ section.id }} .ch__logo-text { font-size: 18px; }
   }
   @media (min-width: 750px) {
@@ -149,9 +172,9 @@
     var mobileNav = root.querySelector('[data-mobile-nav]');
     if (burger && mobileNav) {
       burger.addEventListener('click', function () {
-        var open = mobileNav.hasAttribute('hidden');
-        if (open) { mobileNav.removeAttribute('hidden'); burger.setAttribute('aria-expanded', 'true'); }
-        else { mobileNav.setAttribute('hidden', ''); burger.setAttribute('aria-expanded', 'false'); }
+        var willOpen = !mobileNav.classList.contains('is-open');
+        mobileNav.classList.toggle('is-open', willOpen);
+        burger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
       });
     }
   })();

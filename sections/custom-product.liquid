@@ -18,6 +18,10 @@
 {{ 'swiper-bundle.min.css' | asset_url | stylesheet_tag }}
 <script src="{{ 'swiper-bundle.min.js' | asset_url }}" defer></script>
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
 {%- assign cv = product.selected_or_first_available_variant -%}
 {%- assign on_sale = false -%}
 {%- if cv.compare_at_price and cv.compare_at_price > cv.price -%}{%- assign on_sale = true -%}{%- endif -%}
@@ -139,15 +143,16 @@
     --cp-border: #e3e3e3;
     --cp-radius: 12px;
     --cp-gap: 56px;
-    --cp-max-width: 1200px;
+    --cp-max-width: 1280px;
 
     color: var(--cp-text);
-    padding: 40px 20px 56px;
-    font-family: inherit; /* ggf. Figma-Schrift im Theme setzen */
+    padding: 40px 0 56px;
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   }
   #cp-{{ section.id }} .cp__inner {
     max-width: var(--cp-max-width);
     margin: 0 auto;
+    padding: 0 24px;            /* gleicher Seitenabstand wie der Header */
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--cp-gap);
@@ -180,24 +185,24 @@
   #cp-{{ section.id }} .cp__main .swiper-slide img {
     width: 100%; height: auto; display: block; aspect-ratio: 1 / 1; object-fit: cover;
   }
-  #cp-{{ section.id }} .cp__arrows { display: flex; gap: 8px; margin-top: 14px; }
+  #cp-{{ section.id }} .cp__arrows { display: flex; justify-content: center; gap: 28px; margin-top: 16px; }
   #cp-{{ section.id }} .cp__arrow {
-    width: 40px; height: 40px; border: 1px solid var(--cp-border); background: #fff;
-    border-radius: 50%; cursor: pointer; color: var(--cp-text);
-    display: inline-flex; align-items: center; justify-content: center; transition: border-color .15s;
+    background: none; border: none; padding: 4px; cursor: pointer; color: #9a9a9a;
+    display: inline-flex; align-items: center; justify-content: center; transition: color .15s;
   }
-  #cp-{{ section.id }} .cp__arrow:hover { border-color: var(--cp-green); }
-  #cp-{{ section.id }} .cp__arrow.swiper-button-disabled { opacity: .35; cursor: default; }
+  #cp-{{ section.id }} .cp__arrow svg { width: 30px; height: 30px; }
+  #cp-{{ section.id }} .cp__arrow:hover { color: var(--cp-text); }
+  #cp-{{ section.id }} .cp__arrow.swiper-button-disabled { opacity: .3; cursor: default; }
 
   /* ---------- Info ---------- */
-  #cp-{{ section.id }} .cp__title { font-size: 34px; line-height: 1.1; margin: 0 0 6px; font-weight: 500; }
-  #cp-{{ section.id }} .cp__subtitle { color: var(--cp-muted); font-size: 16px; margin: 0 0 22px; }
+  #cp-{{ section.id }} .cp__title { font-size: 34px; line-height: 1.1; margin: 0 0 6px; font-weight: 700; }
+  #cp-{{ section.id }} .cp__subtitle { color: var(--cp-muted); font-size: 16px; font-weight: 400; margin: 0 0 22px; }
 
   #cp-{{ section.id }} .cp__price { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 22px; }
-  #cp-{{ section.id }} .cp__price-old { color: var(--cp-muted); text-decoration: line-through; font-size: 16px; }
-  #cp-{{ section.id }} .cp__price-now { font-size: 24px; font-weight: 600; }
+  #cp-{{ section.id }} .cp__price-old { color: var(--cp-muted); text-decoration: line-through; font-size: 16px; font-weight: 500; }
+  #cp-{{ section.id }} .cp__price-now { font-size: 24px; font-weight: 700; }
   #cp-{{ section.id }} .cp__price-now.is-sale { color: var(--cp-green); }
-  #cp-{{ section.id }} .cp__tax { color: var(--cp-muted); font-size: 13px; }
+  #cp-{{ section.id }} .cp__tax { color: var(--cp-muted); font-size: 13px; font-weight: 400; }
 
   #cp-{{ section.id }} .cp__options { margin-bottom: 22px; }
   #cp-{{ section.id }} .cp__option { margin-bottom: 16px; }
@@ -209,13 +214,13 @@
   }
   #cp-{{ section.id }} .cp__swatch.is-selected { border-color: var(--cp-green); background: var(--cp-green); color: #fff; }
 
-  #cp-{{ section.id }} .cp__availability { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 22px; }
+  #cp-{{ section.id }} .cp__availability { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 400; color: var(--cp-green); margin-bottom: 22px; }
   #cp-{{ section.id }} .cp__dot { width: 9px; height: 9px; border-radius: 50%; background: var(--cp-green); flex: 0 0 auto; }
   #cp-{{ section.id }} .cp__dot.is-out { background: #b91c1c; }
 
   #cp-{{ section.id }} .cp__atc {
     width: 100%; padding: 17px; background: var(--cp-green); color: #fff; border: none;
-    border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;
+    border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center; gap: 10px; transition: background .15s;
   }
   #cp-{{ section.id }} .cp__atc:hover { background: var(--cp-green-hover); }
@@ -232,9 +237,14 @@
     #cp-{{ section.id }} .cp__main-wrap { order: 1; flex: 1; min-width: 0; }
   }
   @media (max-width: 749px) {
-    #cp-{{ section.id }} .cp__inner { grid-template-columns: 1fr; gap: 26px; }
+    #cp-{{ section.id }} .cp__inner { grid-template-columns: 1fr; gap: 26px; padding: 0 18px; }
     #cp-{{ section.id }} .cp__title { font-size: 27px; }
     #cp-{{ section.id }} .cp__thumb { width: 64px; height: 64px; }
+    /* Galerie randlos bis zum Viewport (Vor-/Nachbar-Bild bis zum Rand) */
+    #cp-{{ section.id }} .cp__main-wrap { margin-left: -18px; margin-right: -18px; }
+    #cp-{{ section.id }} .cp__main { border: none; border-radius: 0; }
+    /* keine Chevrons auf Mobile -> Wischen mit dem Finger */
+    #cp-{{ section.id }} .cp__arrows { display: none; }
   }
 </style>
 
@@ -348,8 +358,8 @@
         keyboard: { enabled: true },
         navigation: { nextEl: root.querySelector('.cp__next'), prevEl: root.querySelector('.cp__prev') },
         breakpoints: {
-          /* Mobile: aktuelles Bild zentriert, Vor-/Nachbar links & rechts angeschnitten */
-          0:   { slidesPerView: 1.18, spaceBetween: 12, centeredSlides: true },
+          /* Mobile: aktuelles Bild zentriert, Vor-/Nachbar links & rechts bis zum Rand angeschnitten */
+          0:   { slidesPerView: 1.12, spaceBetween: 12, centeredSlides: true },
           /* Desktop: ein Bild voll */
           750: { slidesPerView: 1,    spaceBetween: 0,  centeredSlides: false }
         }
