@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(shopify theme *)",
+      "Bash(awk '/custom-product\\\\.liquid/{f=1} f{print} /custom-header\\\\.liquid|trust-badges\\\\.liquid/{if\\(f\\)exit}' /tmp/tc.txt)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
+    ]
+  }
+}

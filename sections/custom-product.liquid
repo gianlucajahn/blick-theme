@@ -1,0 +1,547 @@
+{{ 'swiper-bundle.min.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'swiper-bundle.min.js' | asset_url }}" defer></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+{%- assign cv = product.selected_or_first_available_variant -%}
+{%- assign on_sale = false -%}
+{%- if cv.compare_at_price and cv.compare_at_price > cv.price -%}{%- assign on_sale = true -%}{%- endif -%}
+
+<section class="cp" id="cp-{{ section.id }}">
+  <div class="cp__inner">
+
+    <div class="cp__media">
+      <div class="cp__thumbs">
+        {%- if product.media.size > 0 -%}
+          {%- for media in product.media -%}
+            <button type="button"
+                    class="cp__thumb{% if forloop.first %} is-active{% endif %}"
+                    data-index="{{ forloop.index0 }}"
+                    aria-label="Bild {{ forloop.index }} anzeigen">
+              <img src="{{ media | image_url: width: 160, height: 160, crop: 'center' }}"
+                   alt="{{ media.alt | default: product.title | escape }}"
+                   width="72" height="72" loading="lazy">
+            </button>
+          {%- endfor -%}
+        {%- endif -%}
+      </div>
+
+      <div class="cp__main-wrap">
+        <div class="swiper cp__main">
+          <div class="swiper-wrapper">
+            {%- if product.media.size > 0 -%}
+              {%- for media in product.media -%}
+                <div class="swiper-slide">
+                  <img src="{{ media | image_url: width: 1200 }}"
+                       srcset="{{ media | image_url: width: 600 }} 600w,
+                               {{ media | image_url: width: 900 }} 900w,
+                               {{ media | image_url: width: 1200 }} 1200w"
+                       sizes="(min-width: 750px) 50vw, 100vw"
+                       alt="{{ media.alt | default: product.title | escape }}"
+                       width="{{ media.width }}" height="{{ media.height }}"
+                       loading="{% if forloop.first %}eager{% else %}lazy{% endif %}">
+                </div>
+              {%- endfor -%}
+            {%- else -%}
+              <div class="swiper-slide">{{ 'product-1' | placeholder_svg_tag: 'cp__placeholder' }}</div>
+            {%- endif -%}
+          </div>
+        </div>
+        <div class="cp__arrows">
+          <button type="button" class="cp__arrow cp__prev" aria-label="Vorheriges Bild">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 6l-6 6 6 6"/></svg>
+          </button>
+          <button type="button" class="cp__arrow cp__next" aria-label="Nächstes Bild">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cp__info">
+      <h1 class="cp__title">{{ product.title | escape }}</h1>
+
+      {%- assign subtitle = product.metafields.custom.subtitle | default: section.settings.fallback_subtitle -%}
+      {%- if subtitle != blank -%}
+        <p class="cp__subtitle">{{ subtitle }}</p>
+      {%- endif -%}
+
+      <div class="cp__price" data-price>
+        {%- if on_sale -%}
+          <s class="cp__price-old" data-price-old>{{ cv.compare_at_price | money }}</s>
+        {%- endif -%}
+        <span class="cp__price-now{% if on_sale %} is-sale{% endif %}" data-price-now>{{ cv.price | money }}</span>
+        <span class="cp__tax">inkl. MwSt.</span>
+      </div>
+
+      {%- unless product.has_only_default_variant -%}
+        <div class="cp__options">
+          {%- for option in product.options_with_values -%}
+            <div class="cp__option">
+              <span class="cp__option-name">{{ option.name }}</span>
+              <div class="cp__swatches" data-option-index="{{ forloop.index0 }}">
+                {%- for value in option.values -%}
+                  <button type="button"
+                          class="cp__swatch{% if option.selected_value == value %} is-selected{% endif %}"
+                          data-value="{{ value | escape }}">{{ value }}</button>
+                {%- endfor -%}
+              </div>
+            </div>
+          {%- endfor -%}
+        </div>
+      {%- endunless -%}
+
+      <div class="cp__availability" data-availability>
+        <span class="cp__dot{% unless cv.available %} is-out{% endunless %}"></span>
+        <span data-availability-text>
+          {%- if cv.available -%}{{ section.settings.in_stock_text }}{%- else -%}{{ section.settings.out_of_stock_text }}{%- endif -%}
+        </span>
+      </div>
+
+      <button type="button" class="cp__atc" data-atc{% unless cv.available %} disabled{% endunless %}>
+        <span data-atc-text>{% if cv.available %}In den Warenkorb{% else %}Ausverkauft{% endif %}</span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>
+          <path d="M2.5 3h2l2.2 12.3a1.5 1.5 0 0 0 1.5 1.2h8.8a1.5 1.5 0 0 0 1.5-1.2L21 7H6"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="cp-toast" data-toast role="status" aria-live="polite" aria-hidden="true">
+    <span class="cp-toast__progress" data-toast-progress></span>
+    <button type="button" class="cp-toast__close" data-toast-close aria-label="Schließen">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="cp-toast__head">
+      <span class="cp-toast__check" aria-hidden="true">
+        <svg class="cp-toast__ico-ok" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        <svg class="cp-toast__ico-err" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 7v6M12 17h.01"/></svg>
+      </span>
+      <span class="cp-toast__head-text" data-toast-head>Zum Warenkorb hinzugefügt</span>
+    </div>
+    <div class="cp-toast__product">
+      <img class="cp-toast__img" data-toast-img alt="" width="56" height="56">
+      <div class="cp-toast__meta">
+        <p class="cp-toast__name" data-toast-name></p>
+        <p class="cp-toast__price" data-toast-price></p>
+      </div>
+    </div>
+    <div class="cp-toast__actions">
+      <a class="cp-toast__cart" data-toast-cart href="#">Warenkorb ansehen</a>
+      <button type="button" class="cp-toast__continue" data-toast-close>Weiter einkaufen</button>
+    </div>
+  </div>
+
+  <script type="application/json" data-variants>{{ product.variants | json }}</script>
+</section>
+
+<style>
+  #cp-{{ section.id }} {
+    --cp-green: #557A52;
+    --cp-green-hover: #46663F;
+    --cp-text: #2b2b2b;
+    --cp-muted: #6b7280;
+    --cp-border: #e3e3e3;
+    --cp-radius: 12px;
+    --cp-gap: 56px;
+    --cp-max-width: 1280px;
+
+    color: var(--cp-text);
+    padding: 40px 0 56px;
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  }
+  #cp-{{ section.id }} .cp__inner {
+    max-width: var(--cp-max-width);
+    margin: 0 auto;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--cp-gap);
+    align-items: start;
+  }
+  #cp-{{ section.id }} .cp__media,
+  #cp-{{ section.id }} .cp__info { min-width: 0; }
+
+  #cp-{{ section.id }} .cp__media { display: flex; flex-direction: column; gap: 12px; }
+  #cp-{{ section.id }} .cp__thumbs { display: flex; flex-direction: row; gap: 10px; order: 2; }
+  #cp-{{ section.id }} .cp__thumb {
+    flex: 0 0 auto; width: 72px; height: 72px; padding: 0;
+    border: 2px solid transparent; border-radius: 10px; overflow: hidden;
+    background: none; cursor: pointer; opacity: .6; transition: opacity .15s, border-color .15s;
+  }
+  #cp-{{ section.id }} .cp__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #cp-{{ section.id }} .cp__thumb.is-active { opacity: 1; border-color: var(--cp-green); }
+  #cp-{{ section.id }} .cp__thumb:hover { opacity: 1; }
+
+  #cp-{{ section.id }} .cp__main-wrap { order: 1; }
+  #cp-{{ section.id }} .cp__main {
+    border-radius: var(--cp-radius); overflow: hidden; border: 1px solid var(--cp-border);
+    width: 100%;
+  }
+  #cp-{{ section.id }} .cp__main:not(.swiper-initialized) .swiper-wrapper { display: block; }
+  #cp-{{ section.id }} .cp__main:not(.swiper-initialized) .swiper-slide:not(:first-child) { display: none; }
+  #cp-{{ section.id }} .cp__main .swiper-slide img {
+    width: 100%; height: auto; display: block; aspect-ratio: 1 / 1; object-fit: cover;
+  }
+  #cp-{{ section.id }} .cp__arrows { display: flex; justify-content: center; gap: 0; margin-top: 6px; }
+  #cp-{{ section.id }} .cp__arrow {
+    background: none; border: none; padding: 4px 1px; cursor: pointer; color: #111;
+    display: inline-flex; align-items: center; justify-content: center; transition: color .15s;
+  }
+  #cp-{{ section.id }} .cp__arrow svg { width: 36px; height: 36px; }
+  #cp-{{ section.id }} .cp__arrow:hover { color: #000; }
+  #cp-{{ section.id }} .cp__arrow.swiper-button-disabled { color: #cfcfcf; opacity: 1; cursor: default; }
+
+  #cp-{{ section.id }} .cp__title { font-size: 34px; line-height: 1.1; margin: 0 0 6px; font-weight: 700; }
+  #cp-{{ section.id }} .cp__subtitle { color: var(--cp-muted); font-size: 16px; font-weight: 400; margin: 0 0 22px; }
+
+  #cp-{{ section.id }} .cp__price { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 22px; }
+  #cp-{{ section.id }} .cp__price-old { color: var(--cp-muted); text-decoration: line-through; font-size: 16px; font-weight: 500; }
+  #cp-{{ section.id }} .cp__price-now { font-size: 24px; font-weight: 700; }
+  #cp-{{ section.id }} .cp__price-now.is-sale { color: var(--cp-green); }
+  #cp-{{ section.id }} .cp__tax { color: var(--cp-muted); font-size: 13px; font-weight: 400; }
+
+  #cp-{{ section.id }} .cp__options { margin-bottom: 22px; }
+  #cp-{{ section.id }} .cp__option { margin-bottom: 16px; }
+  #cp-{{ section.id }} .cp__option-name { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; }
+  #cp-{{ section.id }} .cp__swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+  #cp-{{ section.id }} .cp__swatch {
+    padding: 9px 15px; border: 1px solid var(--cp-border); border-radius: 8px;
+    background: #fff; cursor: pointer; font-size: 14px;
+  }
+  #cp-{{ section.id }} .cp__swatch.is-selected { border-color: var(--cp-green); background: var(--cp-green); color: #fff; }
+
+  #cp-{{ section.id }} .cp__availability { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 400; color: var(--cp-green); margin-bottom: 12px; }
+  #cp-{{ section.id }} .cp__dot { width: 9px; height: 9px; border-radius: 50%; background: var(--cp-green); flex: 0 0 auto; }
+  #cp-{{ section.id }} .cp__dot.is-out { background: #b91c1c; }
+
+  #cp-{{ section.id }} .cp__atc {
+    width: 100%; padding: 17px; background: var(--cp-green); color: #fff; border: none;
+    border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px; transition: background .15s;
+  }
+  #cp-{{ section.id }} .cp__atc:hover { background: var(--cp-green-hover); }
+  #cp-{{ section.id }} .cp__atc:disabled { opacity: .5; cursor: not-allowed; }
+
+  #cp-{{ section.id }} .cp-toast {
+    position: fixed; top: 20px; right: 20px; z-index: 9999;
+    width: 360px; max-width: calc(100vw - 32px);
+    background: #fff; border: 1px solid var(--cp-border); border-radius: 16px;
+    box-shadow: 0 18px 50px -12px rgba(16, 24, 40, .28), 0 4px 12px -6px rgba(16, 24, 40, .14);
+    padding: 18px 18px 16px; overflow: hidden; font-family: inherit;
+    opacity: 0; transform: translateX(115%) scale(.98); pointer-events: none;
+    transition: opacity .35s ease, transform .45s cubic-bezier(.16, 1, .3, 1);
+  }
+  #cp-{{ section.id }} .cp-toast.is-visible { opacity: 1; transform: translateX(0) scale(1); pointer-events: auto; }
+  #cp-{{ section.id }} .cp-toast.is-error { border-color: #f1c4c4; }
+  #cp-{{ section.id }} .cp-toast.is-error .cp-toast__product,
+  #cp-{{ section.id }} .cp-toast.is-error .cp-toast__actions { display: none; }
+
+  #cp-{{ section.id }} .cp-toast__progress {
+    position: absolute; left: 0; bottom: 0; height: 3px; width: 100%;
+    background: var(--cp-green); transform-origin: left; transform: scaleX(1);
+  }
+  #cp-{{ section.id }} .cp-toast.is-counting .cp-toast__progress {
+    transform: scaleX(0); transition: transform var(--toast-duration, 4000ms) linear;
+  }
+
+  #cp-{{ section.id }} .cp-toast__close {
+    position: absolute; top: 12px; right: 12px; width: 26px; height: 26px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: none; border: none; border-radius: 50%; color: var(--cp-muted); cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  #cp-{{ section.id }} .cp-toast__close:hover { background: #f3f4f6; color: var(--cp-text); }
+
+  #cp-{{ section.id }} .cp-toast__head { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; padding-right: 26px; }
+  #cp-{{ section.id }} .cp-toast__check {
+    flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--cp-green); color: #fff; display: inline-flex; align-items: center; justify-content: center;
+  }
+  #cp-{{ section.id }} .cp-toast.is-visible .cp-toast__check { animation: cp-pop .45s cubic-bezier(.16, 1, .3, 1) both; }
+  #cp-{{ section.id }} .cp-toast.is-error .cp-toast__check { background: #b91c1c; }
+  #cp-{{ section.id }} .cp-toast__ico-err { display: none; }
+  #cp-{{ section.id }} .cp-toast.is-error .cp-toast__ico-ok { display: none; }
+  #cp-{{ section.id }} .cp-toast.is-error .cp-toast__ico-err { display: inline; }
+  #cp-{{ section.id }} .cp-toast__head-text { font-size: 15px; font-weight: 700; color: var(--cp-text); }
+
+  #cp-{{ section.id }} .cp-toast__product { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  #cp-{{ section.id }} .cp-toast__img {
+    flex: 0 0 auto; width: 56px; height: 56px; border-radius: 10px; object-fit: cover;
+    border: 1px solid var(--cp-border); background: #f8f8f8;
+  }
+  #cp-{{ section.id }} .cp-toast__meta { min-width: 0; }
+  #cp-{{ section.id }} .cp-toast__name {
+    margin: 0 0 2px; font-size: 14px; font-weight: 600; color: var(--cp-text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  #cp-{{ section.id }} .cp-toast__price { margin: 0; font-size: 14px; font-weight: 700; color: var(--cp-green); }
+
+  #cp-{{ section.id }} .cp-toast__actions { display: flex; gap: 8px; }
+  #cp-{{ section.id }} .cp-toast__cart {
+    flex: 1; text-align: center; padding: 11px 14px; border-radius: 10px;
+    background: var(--cp-green); color: #fff; font-size: 14px; font-weight: 700;
+    text-decoration: none; transition: background .15s;
+  }
+  #cp-{{ section.id }} .cp-toast__cart:hover { background: var(--cp-green-hover); }
+  #cp-{{ section.id }} .cp-toast__continue {
+    flex: 0 0 auto; padding: 11px 14px; border-radius: 10px; border: 1px solid var(--cp-border);
+    background: #fff; color: var(--cp-text); font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  #cp-{{ section.id }} .cp-toast__continue:hover { background: #f3f4f6; }
+
+  @keyframes cp-pop {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  @media (max-width: 749px) {
+    #cp-{{ section.id }} .cp-toast { top: 12px; right: 12px; left: 12px; width: auto; transform: translateY(-120%) scale(.98); }
+    #cp-{{ section.id }} .cp-toast.is-visible { transform: translateY(0) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #cp-{{ section.id }} .cp-toast,
+    #cp-{{ section.id }} .cp-toast.is-visible { transform: none; transition: opacity .2s ease; }
+    #cp-{{ section.id }} .cp-toast.is-visible .cp-toast__check { animation: none; }
+  }
+
+  @media (min-width: 750px) {
+    #cp-{{ section.id }} .cp__media { flex-direction: row; gap: 14px; }
+    #cp-{{ section.id }} .cp__thumbs { order: 0; flex-direction: column; width: 76px; flex: 0 0 76px; }
+    #cp-{{ section.id }} .cp__main-wrap { order: 1; flex: 1; min-width: 0; }
+  }
+  @media (max-width: 749px) {
+    #cp-{{ section.id }} .cp__inner { grid-template-columns: 1fr; gap: 26px; padding: 0 18px; }
+    #cp-{{ section.id }} .cp__title { font-size: 27px; }
+    #cp-{{ section.id }} .cp__thumb { width: 64px; height: 64px; }
+    #cp-{{ section.id }} .cp__main-wrap { margin-left: -18px; margin-right: -18px; }
+    #cp-{{ section.id }} .cp__main { border: none; border-radius: 0; }
+    #cp-{{ section.id }} .cp__arrows { display: none; }
+    #cp-{{ section.id }} .cp__main .swiper-slide-prev img { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+    #cp-{{ section.id }} .cp__main .swiper-slide-next img { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
+  }
+</style>
+
+<script>
+  (function () {
+    var root = document.getElementById('cp-{{ section.id }}');
+    if (!root) return;
+
+    var variants = JSON.parse(root.querySelector('[data-variants]').textContent);
+    var moneyFormat = {{ shop.money_format | json }};
+    var routeRoot = (window.Shopify && window.Shopify.routes && window.Shopify.routes.root) || '/';
+    var inStock = {{ section.settings.in_stock_text | json }};
+    var outStock = {{ section.settings.out_of_stock_text | json }};
+
+    function formatMoney(cents) {
+      var value = (cents / 100).toFixed(2).split('.');
+      var withDots = value[0].replace(/(\d)(?=(\d\d\d)+(?!\d))/g, '$1.');
+      return moneyFormat.replace(/\{\{\s*amount[^}]*\}\}/, withDots + ',' + value[1]);
+    }
+
+    var selected = [];
+    root.querySelectorAll('[data-option-index]').forEach(function (group) {
+      var idx = parseInt(group.dataset.optionIndex, 10);
+      var sel = group.querySelector('.is-selected') || group.querySelector('.cp__swatch');
+      if (sel) selected[idx] = sel.dataset.value;
+      group.querySelectorAll('.cp__swatch').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          group.querySelectorAll('.cp__swatch').forEach(function (b) { b.classList.remove('is-selected'); });
+          btn.classList.add('is-selected');
+          selected[idx] = btn.dataset.value;
+          updateVariant();
+        });
+      });
+    });
+
+    function matchVariant() {
+      if (variants.length === 1) return variants[0];
+      return variants.find(function (v) {
+        return v.options.every(function (o, i) { return o === selected[i]; });
+      });
+    }
+
+    var currentVariant = matchVariant() || variants[0];
+    var priceNow = root.querySelector('[data-price-now]');
+    var priceOld = root.querySelector('[data-price-old]');
+    var atc = root.querySelector('[data-atc]');
+    var atcText = root.querySelector('[data-atc-text]');
+    var availText = root.querySelector('[data-availability-text]');
+    var dot = root.querySelector('.cp__dot');
+
+    function updateVariant(skipPrice) {
+      currentVariant = matchVariant();
+      if (!currentVariant) { atc.disabled = true; atcText.textContent = 'Nicht verfügbar'; return; }
+      if (!skipPrice) {
+        priceNow.textContent = formatMoney(currentVariant.price);
+        var sale = currentVariant.compare_at_price && currentVariant.compare_at_price > currentVariant.price;
+        priceNow.classList.toggle('is-sale', !!sale);
+        if (priceOld) {
+          if (sale) { priceOld.textContent = formatMoney(currentVariant.compare_at_price); priceOld.style.display = ''; }
+          else { priceOld.style.display = 'none'; }
+        }
+      }
+      if (currentVariant.available) {
+        atc.disabled = false; atcText.textContent = 'In den Warenkorb';
+        availText.textContent = inStock; dot.classList.remove('is-out');
+      } else {
+        atc.disabled = true; atcText.textContent = 'Ausverkauft';
+        availText.textContent = outStock; dot.classList.add('is-out');
+      }
+    }
+
+    var toast = root.querySelector('[data-toast]');
+    var toastProgress = toast.querySelector('[data-toast-progress]');
+    var toastHead = toast.querySelector('[data-toast-head]');
+    var toastImg = toast.querySelector('[data-toast-img]');
+    var toastName = toast.querySelector('[data-toast-name]');
+    var toastPrice = toast.querySelector('[data-toast-price]');
+    var toastCart = toast.querySelector('[data-toast-cart]');
+    var productTitle = (root.querySelector('.cp__title') ? root.querySelector('.cp__title').textContent : '').trim();
+    var toastTimer = null;
+    toastCart.setAttribute('href', routeRoot + 'cart');
+
+    toast.querySelectorAll('[data-toast-close]').forEach(function (btn) {
+      btn.addEventListener('click', hideToast);
+    });
+
+    function hideToast() {
+      clearTimeout(toastTimer);
+      toast.classList.remove('is-visible', 'is-counting');
+      toast.setAttribute('aria-hidden', 'true');
+    }
+
+    function currentImage() {
+      var img = root.querySelector('.cp__main .swiper-slide-active img') ||
+                root.querySelector('.cp__main .swiper-slide img') ||
+                root.querySelector('.cp__main img');
+      if (!img) return '';
+      return img.currentSrc || img.src || '';
+    }
+
+    function showToast(opts) {
+      clearTimeout(toastTimer);
+      toast.classList.toggle('is-error', !!opts.isError);
+      toastHead.textContent = opts.head;
+      toastName.textContent = opts.name || '';
+      toastPrice.textContent = opts.price || '';
+      if (opts.img) { toastImg.src = opts.img; toastImg.style.display = ''; }
+      else { toastImg.removeAttribute('src'); toastImg.style.display = 'none'; }
+
+      var duration = opts.isError ? 5000 : 4000;
+      toast.style.setProperty('--toast-duration', duration + 'ms');
+
+      toast.classList.remove('is-counting');
+      void toast.offsetWidth; /* Reflow erzwingen, damit Slide-in und Fortschrittsbalken neu starten */
+      toast.classList.add('is-visible');
+      toast.setAttribute('aria-hidden', 'false');
+      requestAnimationFrame(function () { toast.classList.add('is-counting'); });
+      toastTimer = setTimeout(hideToast, duration);
+    }
+
+    atc.addEventListener('click', function () {
+      if (!currentVariant || !currentVariant.available) return;
+      atc.disabled = true; atcText.textContent = 'Wird hinzugefügt …';
+      fetch(routeRoot + 'cart/add.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ items: [{ id: currentVariant.id, quantity: 1 }] })
+      })
+        .then(function (res) {
+          if (!res.ok) return res.json().then(function (e) { throw new Error(e.description || 'Fehler beim Hinzufügen'); });
+          return res.json();
+        })
+        .then(function () {
+          showToast({
+            head: 'Zum Warenkorb hinzugefügt',
+            name: productTitle,
+            price: formatMoney(currentVariant.price),
+            img: currentImage()
+          });
+          return updateCartCount();
+        })
+        .catch(function (err) {
+          showToast({ head: err.message || 'Etwas ist schiefgelaufen', isError: true });
+        })
+        .finally(function () { updateVariant(true); });
+    });
+
+    function updateCartCount() {
+      return fetch(routeRoot + 'cart.js').then(function (r) { return r.json(); }).then(function (cart) {
+        document.querySelectorAll('.cart-count-bubble span[aria-hidden="true"], .cart-count-bubble span:first-child, [data-cart-count]')
+          .forEach(function (el) { el.textContent = cart.item_count; });
+        var bubble = document.querySelector('.cart-count-bubble'); if (bubble) bubble.classList.remove('hidden');
+      }).catch(function () {});
+    }
+
+    var mainSwiper = null;
+    var mq = window.matchMedia('(max-width: 749px)');
+    var thumbs = root.querySelectorAll('.cp__thumb');
+
+    thumbs.forEach(function (t) {
+      t.addEventListener('click', function () {
+        if (!mainSwiper) return;
+        var i = parseInt(t.dataset.index, 10);
+        if (mainSwiper.params.loop) mainSwiper.slideToLoop(i); else mainSwiper.slideTo(i);
+      });
+    });
+    function syncThumbs(active) {
+      thumbs.forEach(function (t) {
+        t.classList.toggle('is-active', parseInt(t.dataset.index, 10) === active);
+      });
+    }
+
+    function buildSwiper() {
+      var isMobile = mq.matches;
+      var slideCount = root.querySelectorAll('.cp__main .swiper-slide').length;
+      mainSwiper = new Swiper(root.querySelector('.cp__main'), {
+        speed: 400,
+        loop: isMobile && slideCount > 1, /* nur Mobile loopt (beidseitiges Peek); Desktop ohne Loop, damit die Pfeile an den Enden ausgrauen */
+        centeredSlides: isMobile,
+        slidesPerView: isMobile ? 1.12 : 1,
+        spaceBetween: isMobile ? 12 : 0,
+        keyboard: { enabled: true },
+        navigation: { nextEl: root.querySelector('.cp__next'), prevEl: root.querySelector('.cp__prev') }
+      });
+      mainSwiper.on('slideChange', function () {
+        syncThumbs(mainSwiper.params.loop ? mainSwiper.realIndex : mainSwiper.activeIndex);
+      });
+    }
+
+    function initSwiper() {
+      buildSwiper();
+      var wasMobile = mq.matches;
+      window.addEventListener('resize', function () {
+        var nowMobile = mq.matches;
+        if (nowMobile !== wasMobile) {
+          wasMobile = nowMobile;
+          if (mainSwiper) mainSwiper.destroy(true, true);
+          buildSwiper();
+        }
+      });
+    }
+    function waitForSwiper() { if (window.Swiper) initSwiper(); else setTimeout(waitForSwiper, 50); }
+    if (document.readyState !== 'loading') waitForSwiper();
+    else document.addEventListener('DOMContentLoaded', waitForSwiper);
+
+    updateVariant(true);
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Custom Product",
+  "tag": "section",
+  "class": "section-custom-product",
+  "settings": [
+    { "type": "text", "id": "fallback_subtitle", "label": "Untertitel (Fallback)", "info": "Wird genutzt, falls kein Metafeld custom.subtitle gesetzt ist", "default": "Enthält Algenöl mit DHA und EPA" },
+    { "type": "text", "id": "in_stock_text", "label": "Text 'Auf Lager'", "default": "Auf Lager! Versand in ca. 2-4 Werktagen" },
+    { "type": "text", "id": "out_of_stock_text", "label": "Text 'Ausverkauft'", "default": "Derzeit nicht verfügbar" }
+  ],
+  "presets": [ { "name": "Custom Product" } ]
+}
+{% endschema %}
