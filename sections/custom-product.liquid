@@ -1,0 +1,391 @@
+{%- comment -%}
+  ============================================================
+  CUSTOM PRODUCT SECTION — Blicksolutions Front End Test Task
+  Layout nach Figma (Schwarzkümmelöl PDP)
+  ============================================================
+  Enthält:
+   - Image Gallery (Swiper.js): Desktop = Thumbs vertikal links + großes Bild rechts,
+     Pfeile unter dem Bild | Mobile = großes Bild (Peek) + Thumbs darunter
+   - Untertitel (Metafeld custom.subtitle, mit Fallback)
+   - Sale-Preis (durchgestrichener Vergleichspreis + grüner Aktionspreis) + "inkl. MwSt."
+   - Verfügbarkeits-Zeile mit grünem Punkt
+   - Funktionierender Add-to-Cart (Shopify AJAX /cart/add.js)
+
+  Einbindung: Datei nach  sections/custom-product.liquid
+  Farben oben in den CSS-Variablen exakt an Figma anpassen (Hex aus Figma kopieren).
+{%- endcomment -%}
+
+{{ 'swiper-bundle.min.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'swiper-bundle.min.js' | asset_url }}" defer></script>
+
+{%- assign cv = product.selected_or_first_available_variant -%}
+{%- assign on_sale = false -%}
+{%- if cv.compare_at_price and cv.compare_at_price > cv.price -%}{%- assign on_sale = true -%}{%- endif -%}
+
+<section class="cp" id="cp-{{ section.id }}">
+  <div class="cp__inner">
+
+    {%- comment -%} ----------- IMAGE GALLERY ----------- {%- endcomment -%}
+    <div class="cp__media">
+      <div class="cp__thumbs">
+        {%- if product.media.size > 0 -%}
+          {%- for media in product.media -%}
+            <button type="button"
+                    class="cp__thumb{% if forloop.first %} is-active{% endif %}"
+                    data-index="{{ forloop.index0 }}"
+                    aria-label="Bild {{ forloop.index }} anzeigen">
+              <img src="{{ media | image_url: width: 160 }}"
+                   alt="{{ media.alt | default: product.title | escape }}" loading="lazy">
+            </button>
+          {%- endfor -%}
+        {%- endif -%}
+      </div>
+
+      <div class="cp__main-wrap">
+        <div class="swiper cp__main">
+          <div class="swiper-wrapper">
+            {%- if product.media.size > 0 -%}
+              {%- for media in product.media -%}
+                <div class="swiper-slide">
+                  <img src="{{ media | image_url: width: 1200 }}"
+                       srcset="{{ media | image_url: width: 600 }} 600w,
+                               {{ media | image_url: width: 900 }} 900w,
+                               {{ media | image_url: width: 1200 }} 1200w"
+                       sizes="(min-width: 750px) 50vw, 100vw"
+                       alt="{{ media.alt | default: product.title | escape }}"
+                       width="{{ media.width }}" height="{{ media.height }}"
+                       loading="{% if forloop.first %}eager{% else %}lazy{% endif %}">
+                </div>
+              {%- endfor -%}
+            {%- else -%}
+              <div class="swiper-slide">{{ 'product-1' | placeholder_svg_tag: 'cp__placeholder' }}</div>
+            {%- endif -%}
+          </div>
+        </div>
+        <div class="cp__arrows">
+          <button type="button" class="cp__arrow cp__prev" aria-label="Vorheriges Bild">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 6l-6 6 6 6"/></svg>
+          </button>
+          <button type="button" class="cp__arrow cp__next" aria-label="Nächstes Bild">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {%- comment -%} ----------- PRODUCT INFO ----------- {%- endcomment -%}
+    <div class="cp__info">
+      <h1 class="cp__title">{{ product.title | escape }}</h1>
+
+      {%- assign subtitle = product.metafields.custom.subtitle | default: section.settings.fallback_subtitle -%}
+      {%- if subtitle != blank -%}
+        <p class="cp__subtitle">{{ subtitle }}</p>
+      {%- endif -%}
+
+      <div class="cp__price" data-price>
+        {%- if on_sale -%}
+          <s class="cp__price-old" data-price-old>{{ cv.compare_at_price | money }}</s>
+        {%- endif -%}
+        <span class="cp__price-now{% if on_sale %} is-sale{% endif %}" data-price-now>{{ cv.price | money }}</span>
+        <span class="cp__tax">inkl. MwSt.</span>
+      </div>
+
+      {%- comment -%} Varianten nur anzeigen, falls das Produkt welche hat (Figma: keine) {%- endcomment -%}
+      {%- unless product.has_only_default_variant -%}
+        <div class="cp__options">
+          {%- for option in product.options_with_values -%}
+            <div class="cp__option">
+              <span class="cp__option-name">{{ option.name }}</span>
+              <div class="cp__swatches" data-option-index="{{ forloop.index0 }}">
+                {%- for value in option.values -%}
+                  <button type="button"
+                          class="cp__swatch{% if option.selected_value == value %} is-selected{% endif %}"
+                          data-value="{{ value | escape }}">{{ value }}</button>
+                {%- endfor -%}
+              </div>
+            </div>
+          {%- endfor -%}
+        </div>
+      {%- endunless -%}
+
+      <div class="cp__availability" data-availability>
+        <span class="cp__dot{% unless cv.available %} is-out{% endunless %}"></span>
+        <span data-availability-text>
+          {%- if cv.available -%}{{ section.settings.in_stock_text }}{%- else -%}{{ section.settings.out_of_stock_text }}{%- endif -%}
+        </span>
+      </div>
+
+      <button type="button" class="cp__atc" data-atc{% unless cv.available %} disabled{% endunless %}>
+        <span data-atc-text>{% if cv.available %}In den Warenkorb{% else %}Ausverkauft{% endif %}</span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>
+          <path d="M2.5 3h2l2.2 12.3a1.5 1.5 0 0 0 1.5 1.2h8.8a1.5 1.5 0 0 0 1.5-1.2L21 7H6"/>
+        </svg>
+      </button>
+      <p class="cp__msg" data-msg hidden></p>
+    </div>
+  </div>
+
+  <script type="application/json" data-variants>{{ product.variants | json }}</script>
+</section>
+
+<style>
+  #cp-{{ section.id }} {
+    /* === Design-Tokens: EXAKTE Hex-Werte aus Figma hier eintragen === */
+    --cp-green: #557A52;          /* Button, Sale-Preis, Punkt */
+    --cp-green-hover: #46663F;
+    --cp-text: #2b2b2b;
+    --cp-muted: #6b7280;
+    --cp-border: #e3e3e3;
+    --cp-radius: 12px;
+    --cp-gap: 56px;
+    --cp-max-width: 1200px;
+
+    color: var(--cp-text);
+    padding: 40px 20px 56px;
+    font-family: inherit; /* ggf. Figma-Schrift im Theme setzen */
+  }
+  #cp-{{ section.id }} .cp__inner {
+    max-width: var(--cp-max-width);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--cp-gap);
+    align-items: start;
+  }
+  /* verhindert, dass ein breites Bild die Grid-Spalte aufbläht */
+  #cp-{{ section.id }} .cp__media,
+  #cp-{{ section.id }} .cp__info { min-width: 0; }
+
+  /* ---------- Gallery ---------- */
+  #cp-{{ section.id }} .cp__media { display: flex; flex-direction: column; gap: 12px; }
+  #cp-{{ section.id }} .cp__thumbs { display: flex; flex-direction: row; gap: 10px; order: 2; }
+  #cp-{{ section.id }} .cp__thumb {
+    flex: 0 0 auto; width: 72px; height: 72px; padding: 0;
+    border: 2px solid transparent; border-radius: 10px; overflow: hidden;
+    background: none; cursor: pointer; opacity: .6; transition: opacity .15s, border-color .15s;
+  }
+  #cp-{{ section.id }} .cp__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #cp-{{ section.id }} .cp__thumb.is-active { opacity: 1; border-color: var(--cp-green); }
+  #cp-{{ section.id }} .cp__thumb:hover { opacity: 1; }
+
+  #cp-{{ section.id }} .cp__main-wrap { order: 1; }
+  #cp-{{ section.id }} .cp__main {
+    border-radius: var(--cp-radius); overflow: hidden; border: 1px solid var(--cp-border);
+    width: 100%;
+  }
+  /* Solange Swiper noch nicht initialisiert ist: nur erstes Bild zeigen (kein Aufblähen) */
+  #cp-{{ section.id }} .cp__main:not(.swiper-initialized) .swiper-wrapper { display: block; }
+  #cp-{{ section.id }} .cp__main:not(.swiper-initialized) .swiper-slide:not(:first-child) { display: none; }
+  #cp-{{ section.id }} .cp__main .swiper-slide img {
+    width: 100%; height: auto; display: block; aspect-ratio: 1 / 1; object-fit: cover;
+  }
+  #cp-{{ section.id }} .cp__arrows { display: flex; gap: 8px; margin-top: 14px; }
+  #cp-{{ section.id }} .cp__arrow {
+    width: 40px; height: 40px; border: 1px solid var(--cp-border); background: #fff;
+    border-radius: 50%; cursor: pointer; color: var(--cp-text);
+    display: inline-flex; align-items: center; justify-content: center; transition: border-color .15s;
+  }
+  #cp-{{ section.id }} .cp__arrow:hover { border-color: var(--cp-green); }
+  #cp-{{ section.id }} .cp__arrow.swiper-button-disabled { opacity: .35; cursor: default; }
+
+  /* ---------- Info ---------- */
+  #cp-{{ section.id }} .cp__title { font-size: 34px; line-height: 1.1; margin: 0 0 6px; font-weight: 500; }
+  #cp-{{ section.id }} .cp__subtitle { color: var(--cp-muted); font-size: 16px; margin: 0 0 22px; }
+
+  #cp-{{ section.id }} .cp__price { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 22px; }
+  #cp-{{ section.id }} .cp__price-old { color: var(--cp-muted); text-decoration: line-through; font-size: 16px; }
+  #cp-{{ section.id }} .cp__price-now { font-size: 24px; font-weight: 600; }
+  #cp-{{ section.id }} .cp__price-now.is-sale { color: var(--cp-green); }
+  #cp-{{ section.id }} .cp__tax { color: var(--cp-muted); font-size: 13px; }
+
+  #cp-{{ section.id }} .cp__options { margin-bottom: 22px; }
+  #cp-{{ section.id }} .cp__option { margin-bottom: 16px; }
+  #cp-{{ section.id }} .cp__option-name { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; }
+  #cp-{{ section.id }} .cp__swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+  #cp-{{ section.id }} .cp__swatch {
+    padding: 9px 15px; border: 1px solid var(--cp-border); border-radius: 8px;
+    background: #fff; cursor: pointer; font-size: 14px;
+  }
+  #cp-{{ section.id }} .cp__swatch.is-selected { border-color: var(--cp-green); background: var(--cp-green); color: #fff; }
+
+  #cp-{{ section.id }} .cp__availability { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 22px; }
+  #cp-{{ section.id }} .cp__dot { width: 9px; height: 9px; border-radius: 50%; background: var(--cp-green); flex: 0 0 auto; }
+  #cp-{{ section.id }} .cp__dot.is-out { background: #b91c1c; }
+
+  #cp-{{ section.id }} .cp__atc {
+    width: 100%; padding: 17px; background: var(--cp-green); color: #fff; border: none;
+    border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px; transition: background .15s;
+  }
+  #cp-{{ section.id }} .cp__atc:hover { background: var(--cp-green-hover); }
+  #cp-{{ section.id }} .cp__atc:disabled { opacity: .5; cursor: not-allowed; }
+
+  #cp-{{ section.id }} .cp__msg { margin-top: 12px; font-size: 14px; }
+  #cp-{{ section.id }} .cp__msg.is-success { color: var(--cp-green); }
+  #cp-{{ section.id }} .cp__msg.is-error { color: #b91c1c; }
+
+  /* ---------- Desktop ---------- */
+  @media (min-width: 750px) {
+    #cp-{{ section.id }} .cp__media { flex-direction: row; gap: 14px; }
+    #cp-{{ section.id }} .cp__thumbs { order: 0; flex-direction: column; width: 76px; flex: 0 0 76px; }
+    #cp-{{ section.id }} .cp__main-wrap { order: 1; flex: 1; min-width: 0; }
+  }
+  @media (max-width: 749px) {
+    #cp-{{ section.id }} .cp__inner { grid-template-columns: 1fr; gap: 26px; }
+    #cp-{{ section.id }} .cp__title { font-size: 27px; }
+    #cp-{{ section.id }} .cp__thumb { width: 64px; height: 64px; }
+  }
+</style>
+
+<script>
+  (function () {
+    var root = document.getElementById('cp-{{ section.id }}');
+    if (!root) return;
+
+    var variants = JSON.parse(root.querySelector('[data-variants]').textContent);
+    var moneyFormat = {{ shop.money_format | json }};
+    var routeRoot = (window.Shopify && window.Shopify.routes && window.Shopify.routes.root) || '/';
+    var inStock = {{ section.settings.in_stock_text | json }};
+    var outStock = {{ section.settings.out_of_stock_text | json }};
+
+    function formatMoney(cents) {
+      var value = (cents / 100).toFixed(2).split('.');
+      var withDots = value[0].replace(/(\d)(?=(\d\d\d)+(?!\d))/g, '$1.');
+      return moneyFormat.replace(/\{\{\s*amount[^}]*\}\}/, withDots + ',' + value[1]);
+    }
+
+    /* ---- Varianten (falls vorhanden) ---- */
+    var selected = [];
+    root.querySelectorAll('[data-option-index]').forEach(function (group) {
+      var idx = parseInt(group.dataset.optionIndex, 10);
+      var sel = group.querySelector('.is-selected') || group.querySelector('.cp__swatch');
+      if (sel) selected[idx] = sel.dataset.value;
+      group.querySelectorAll('.cp__swatch').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          group.querySelectorAll('.cp__swatch').forEach(function (b) { b.classList.remove('is-selected'); });
+          btn.classList.add('is-selected');
+          selected[idx] = btn.dataset.value;
+          updateVariant();
+        });
+      });
+    });
+
+    function matchVariant() {
+      if (variants.length === 1) return variants[0];
+      return variants.find(function (v) {
+        return v.options.every(function (o, i) { return o === selected[i]; });
+      });
+    }
+
+    var currentVariant = matchVariant() || variants[0];
+    var priceNow = root.querySelector('[data-price-now]');
+    var priceOld = root.querySelector('[data-price-old]');
+    var atc = root.querySelector('[data-atc]');
+    var atcText = root.querySelector('[data-atc-text]');
+    var availText = root.querySelector('[data-availability-text]');
+    var dot = root.querySelector('.cp__dot');
+
+    function updateVariant(skipPrice) {
+      currentVariant = matchVariant();
+      if (!currentVariant) { atc.disabled = true; atcText.textContent = 'Nicht verfügbar'; return; }
+      if (!skipPrice) {
+        priceNow.textContent = formatMoney(currentVariant.price);
+        var sale = currentVariant.compare_at_price && currentVariant.compare_at_price > currentVariant.price;
+        priceNow.classList.toggle('is-sale', !!sale);
+        if (priceOld) {
+          if (sale) { priceOld.textContent = formatMoney(currentVariant.compare_at_price); priceOld.style.display = ''; }
+          else { priceOld.style.display = 'none'; }
+        }
+      }
+      if (currentVariant.available) {
+        atc.disabled = false; atcText.textContent = 'In den Warenkorb';
+        availText.textContent = inStock; dot.classList.remove('is-out');
+      } else {
+        atc.disabled = true; atcText.textContent = 'Ausverkauft';
+        availText.textContent = outStock; dot.classList.add('is-out');
+      }
+    }
+
+    /* ---- Add to Cart ---- */
+    var msg = root.querySelector('[data-msg]');
+    function showMsg(text, isError) {
+      msg.textContent = text; msg.hidden = false;
+      msg.className = 'cp__msg ' + (isError ? 'is-error' : 'is-success');
+    }
+    atc.addEventListener('click', function () {
+      if (!currentVariant || !currentVariant.available) return;
+      atc.disabled = true; atcText.textContent = 'Wird hinzugefügt …';
+      fetch(routeRoot + 'cart/add.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ items: [{ id: currentVariant.id, quantity: 1 }] })
+      })
+        .then(function (res) {
+          if (!res.ok) return res.json().then(function (e) { throw new Error(e.description || 'Fehler beim Hinzufügen'); });
+          return res.json();
+        })
+        .then(function () { showMsg('Zum Warenkorb hinzugefügt ✓', false); return updateCartCount(); })
+        .catch(function (err) { showMsg(err.message, true); })
+        .finally(function () { updateVariant(true); });
+    });
+
+    function updateCartCount() {
+      return fetch(routeRoot + 'cart.js').then(function (r) { return r.json(); }).then(function (cart) {
+        document.querySelectorAll('.cart-count-bubble span[aria-hidden="true"], .cart-count-bubble span:first-child, [data-cart-count]')
+          .forEach(function (el) { el.textContent = cart.item_count; });
+        var bubble = document.querySelector('.cart-count-bubble'); if (bubble) bubble.classList.remove('hidden');
+      }).catch(function () {});
+    }
+
+    /* ---- Swiper Gallery ---- */
+    function initSwiper() {
+      var slideCount = root.querySelectorAll('.cp__main .swiper-slide').length;
+      var useLoop = slideCount > 1;
+      var mainSwiper = new Swiper(root.querySelector('.cp__main'), {
+        speed: 400,
+        loop: useLoop,
+        keyboard: { enabled: true },
+        navigation: { nextEl: root.querySelector('.cp__next'), prevEl: root.querySelector('.cp__prev') },
+        breakpoints: {
+          /* Mobile: aktuelles Bild zentriert, Vor-/Nachbar links & rechts angeschnitten */
+          0:   { slidesPerView: 1.18, spaceBetween: 12, centeredSlides: true },
+          /* Desktop: ein Bild voll */
+          750: { slidesPerView: 1,    spaceBetween: 0,  centeredSlides: false }
+        }
+      });
+      var thumbs = root.querySelectorAll('.cp__thumb');
+      thumbs.forEach(function (t) {
+        t.addEventListener('click', function () {
+          var i = parseInt(t.dataset.index, 10);
+          if (useLoop) mainSwiper.slideToLoop(i); else mainSwiper.slideTo(i);
+        });
+      });
+      mainSwiper.on('slideChange', function () {
+        var active = useLoop ? mainSwiper.realIndex : mainSwiper.activeIndex;
+        thumbs.forEach(function (t) {
+          t.classList.toggle('is-active', parseInt(t.dataset.index, 10) === active);
+        });
+      });
+    }
+    function waitForSwiper() { if (window.Swiper) initSwiper(); else setTimeout(waitForSwiper, 50); }
+    if (document.readyState !== 'loading') waitForSwiper();
+    else document.addEventListener('DOMContentLoaded', waitForSwiper);
+
+    updateVariant(true);
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Custom Product",
+  "tag": "section",
+  "class": "section-custom-product",
+  "settings": [
+    { "type": "text", "id": "fallback_subtitle", "label": "Untertitel (Fallback)", "info": "Wird genutzt, falls kein Metafeld custom.subtitle gesetzt ist", "default": "Enthält Algenöl mit DHA und EPA" },
+    { "type": "text", "id": "in_stock_text", "label": "Text 'Auf Lager'", "default": "Auf Lager! Versand in ca. 2-4 Werktagen" },
+    { "type": "text", "id": "out_of_stock_text", "label": "Text 'Ausverkauft'", "default": "Derzeit nicht verfügbar" }
+  ],
+  "presets": [ { "name": "Custom Product" } ]
+}
+{% endschema %}

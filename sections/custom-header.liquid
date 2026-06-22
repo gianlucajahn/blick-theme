@@ -1,0 +1,171 @@
+{%- comment -%}
+  ============================================================
+  CUSTOM HEADER — exakt nach Figma
+  ============================================================
+  Desktop: Navigation links · Logo mittig · Account + Warenkorb rechts
+  Mobile:  Hamburger links · Logo mittig · Warenkorb rechts (Nav als Dropdown)
+
+  Einbindung:
+   1. Datei nach  sections/custom-header.liquid
+   2. sections/header-group.json durch die gelieferte Version ersetzen
+   3. Logo im Theme-Editor (Section "Custom Header") hochladen
+   4. Menü unter Navigation -> Hauptmenü auf "Shop / Rezepte / Über uns" setzen
+{%- endcomment -%}
+
+{%- assign menu = section.settings.menu -%}
+
+<header class="ch{% if section.settings.enable_sticky %} ch--sticky{% endif %}" id="ch-{{ section.id }}">
+  <div class="ch__inner">
+
+    {%- comment -%} LINKS: Desktop-Nav + Mobile-Hamburger {%- endcomment -%}
+    <div class="ch__left">
+      <button type="button" class="ch__burger" aria-label="Menü öffnen" aria-expanded="false" data-burger>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <nav class="ch__nav" aria-label="Hauptnavigation">
+        {%- if menu != blank -%}
+          {%- for link in menu.links -%}
+            <a href="{{ link.url }}" class="ch__link">{{ link.title }}</a>
+          {%- endfor -%}
+        {%- else -%}
+          <a href="#" class="ch__link">Shop</a>
+          <a href="#" class="ch__link">Rezepte</a>
+          <a href="#" class="ch__link">Über uns</a>
+        {%- endif -%}
+      </nav>
+    </div>
+
+    {%- comment -%} MITTE: Logo {%- endcomment -%}
+    <div class="ch__center">
+      <a href="{{ routes.root_url }}" class="ch__logo" aria-label="{{ shop.name | escape }}">
+        {%- if section.settings.logo != blank -%}
+          <img
+            src="{{ section.settings.logo | image_url: width: 200 }}"
+            alt="{{ shop.name | escape }}"
+            width="{{ section.settings.logo_width }}"
+            style="width: {{ section.settings.logo_width }}px; height: auto;">
+        {%- else -%}
+          <span class="ch__logo-text">{{ shop.name }}</span>
+        {%- endif -%}
+      </a>
+    </div>
+
+    {%- comment -%} RECHTS: Account + Warenkorb {%- endcomment -%}
+    <div class="ch__right">
+      {%- if section.settings.show_account -%}
+        <a href="{{ routes.account_url }}" class="ch__icon" aria-label="Konto">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg>
+        </a>
+      {%- endif -%}
+      <a href="{{ routes.cart_url }}" class="ch__icon ch__cart" aria-label="Warenkorb">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 7h13l-1.2 9.2a1.5 1.5 0 0 1-1.5 1.3H8.7a1.5 1.5 0 0 1-1.5-1.3L6 4H3"/><path d="M9 11a3 3 0 0 0 6 0"/></svg>
+        <span class="cart-count-bubble{% if cart.item_count == 0 %} hidden{% endif %}">
+          <span data-cart-count>{{ cart.item_count }}</span>
+        </span>
+      </a>
+    </div>
+  </div>
+
+  {%- comment -%} Mobiles Dropdown-Menü {%- endcomment -%}
+  <nav class="ch__mobile-nav" aria-label="Mobile Navigation" data-mobile-nav hidden>
+    {%- if menu != blank -%}
+      {%- for link in menu.links -%}
+        <a href="{{ link.url }}" class="ch__mobile-link">{{ link.title }}</a>
+      {%- endfor -%}
+    {%- else -%}
+      <a href="#" class="ch__mobile-link">Shop</a>
+      <a href="#" class="ch__mobile-link">Rezepte</a>
+      <a href="#" class="ch__mobile-link">Über uns</a>
+    {%- endif -%}
+  </nav>
+</header>
+
+<style>
+  #ch-{{ section.id }} {
+    --ch-text: #1f1f1f;
+    --ch-border: #ececec;
+    background: #fff;
+    border-bottom: 1px solid var(--ch-border);
+  }
+  #ch-{{ section.id }}.ch--sticky { position: sticky; top: 0; z-index: 50; }
+  #ch-{{ section.id }} .ch__inner {
+    max-width: 1280px; margin: 0 auto; padding: 18px 24px;
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px;
+  }
+
+  /* links */
+  #ch-{{ section.id }} .ch__left { display: flex; align-items: center; }
+  #ch-{{ section.id }} .ch__nav { display: flex; gap: 28px; }
+  #ch-{{ section.id }} .ch__link {
+    color: var(--ch-text); text-decoration: none; font-size: 15px; line-height: 1;
+    transition: opacity .15s;
+  }
+  #ch-{{ section.id }} .ch__link:hover { opacity: .6; }
+  #ch-{{ section.id }} .ch__burger { display: none; background: none; border: none; padding: 0; cursor: pointer; color: var(--ch-text); }
+
+  /* mitte */
+  #ch-{{ section.id }} .ch__center { display: flex; justify-content: center; }
+  #ch-{{ section.id }} .ch__logo { display: inline-flex; align-items: center; text-decoration: none; }
+  #ch-{{ section.id }} .ch__logo img { display: block; }
+  #ch-{{ section.id }} .ch__logo-text { font-size: 22px; font-weight: 500; color: var(--ch-text); white-space: nowrap; }
+
+  /* rechts */
+  #ch-{{ section.id }} .ch__right { display: flex; align-items: center; justify-content: flex-end; gap: 18px; }
+  #ch-{{ section.id }} .ch__icon { color: var(--ch-text); position: relative; display: inline-flex; }
+  #ch-{{ section.id }} .ch__icon:hover { opacity: .6; }
+  #ch-{{ section.id }} .ch__cart .cart-count-bubble {
+    position: absolute; top: -6px; right: -8px;
+    background: var(--ch-text); color: #fff; font-size: 10px; line-height: 1;
+    min-width: 16px; height: 16px; border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center; padding: 0 4px;
+  }
+  #ch-{{ section.id }} .ch__cart .cart-count-bubble.hidden { display: none; }
+
+  /* mobiles Menü */
+  #ch-{{ section.id }} .ch__mobile-nav {
+    display: flex; flex-direction: column; border-top: 1px solid var(--ch-border); padding: 8px 24px 16px;
+  }
+  #ch-{{ section.id }} .ch__mobile-link { color: var(--ch-text); text-decoration: none; padding: 12px 0; font-size: 16px; border-bottom: 1px solid var(--ch-border); }
+
+  @media (max-width: 749px) {
+    #ch-{{ section.id }} .ch__inner { padding: 14px 18px; }
+    #ch-{{ section.id }} .ch__nav { display: none; }
+    #ch-{{ section.id }} .ch__burger { display: inline-flex; }
+    #ch-{{ section.id }} .ch__right { gap: 0; }
+    /* Account-Icon auf Mobile ausblenden (Figma zeigt nur Warenkorb) */
+    #ch-{{ section.id }} .ch__right .ch__icon:not(.ch__cart) { display: none; }
+    #ch-{{ section.id }} .ch__logo-text { font-size: 18px; }
+  }
+  @media (min-width: 750px) {
+    #ch-{{ section.id }} .ch__mobile-nav { display: none !important; }
+  }
+</style>
+
+<script>
+  (function () {
+    var root = document.getElementById('ch-{{ section.id }}');
+    if (!root) return;
+    var burger = root.querySelector('[data-burger]');
+    var mobileNav = root.querySelector('[data-mobile-nav]');
+    if (burger && mobileNav) {
+      burger.addEventListener('click', function () {
+        var open = mobileNav.hasAttribute('hidden');
+        if (open) { mobileNav.removeAttribute('hidden'); burger.setAttribute('aria-expanded', 'true'); }
+        else { mobileNav.setAttribute('hidden', ''); burger.setAttribute('aria-expanded', 'false'); }
+      });
+    }
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Custom Header",
+  "settings": [
+    { "type": "image_picker", "id": "logo", "label": "Logo" },
+    { "type": "range", "id": "logo_width", "min": 24, "max": 120, "step": 2, "unit": "px", "label": "Logo-Breite", "default": 44 },
+    { "type": "link_list", "id": "menu", "label": "Menü", "default": "main-menu" },
+    { "type": "checkbox", "id": "show_account", "label": "Account-Icon anzeigen", "default": true },
+    { "type": "checkbox", "id": "enable_sticky", "label": "Header beim Scrollen fixieren", "default": false }
+  ]
+}
+{% endschema %}
