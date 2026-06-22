@@ -1,20 +1,3 @@
-{%- comment -%}
-  ============================================================
-  CUSTOM PRODUCT SECTION — Blicksolutions Front End Test Task
-  Layout nach Figma (Schwarzkümmelöl PDP)
-  ============================================================
-  Enthält:
-   - Image Gallery (Swiper.js): Desktop = Thumbs vertikal links + großes Bild rechts,
-     Pfeile unter dem Bild | Mobile = großes Bild (Peek) + Thumbs darunter
-   - Untertitel (Metafeld custom.subtitle, mit Fallback)
-   - Sale-Preis (durchgestrichener Vergleichspreis + grüner Aktionspreis) + "inkl. MwSt."
-   - Verfügbarkeits-Zeile mit grünem Punkt
-   - Funktionierender Add-to-Cart (Shopify AJAX /cart/add.js)
-
-  Einbindung: Datei nach  sections/custom-product.liquid
-  Farben oben in den CSS-Variablen exakt an Figma anpassen (Hex aus Figma kopieren).
-{%- endcomment -%}
-
 {{ 'swiper-bundle.min.css' | asset_url | stylesheet_tag }}
 <script src="{{ 'swiper-bundle.min.js' | asset_url }}" defer></script>
 
@@ -29,7 +12,6 @@
 <section class="cp" id="cp-{{ section.id }}">
   <div class="cp__inner">
 
-    {%- comment -%} ----------- IMAGE GALLERY ----------- {%- endcomment -%}
     <div class="cp__media">
       <div class="cp__thumbs">
         {%- if product.media.size > 0 -%}
@@ -38,8 +20,9 @@
                     class="cp__thumb{% if forloop.first %} is-active{% endif %}"
                     data-index="{{ forloop.index0 }}"
                     aria-label="Bild {{ forloop.index }} anzeigen">
-              <img src="{{ media | image_url: width: 160 }}"
-                   alt="{{ media.alt | default: product.title | escape }}" loading="lazy">
+              <img src="{{ media | image_url: width: 160, height: 160, crop: 'center' }}"
+                   alt="{{ media.alt | default: product.title | escape }}"
+                   width="72" height="72" loading="lazy">
             </button>
           {%- endfor -%}
         {%- endif -%}
@@ -77,7 +60,6 @@
       </div>
     </div>
 
-    {%- comment -%} ----------- PRODUCT INFO ----------- {%- endcomment -%}
     <div class="cp__info">
       <h1 class="cp__title">{{ product.title | escape }}</h1>
 
@@ -94,7 +76,6 @@
         <span class="cp__tax">inkl. MwSt.</span>
       </div>
 
-      {%- comment -%} Varianten nur anzeigen, falls das Produkt welche hat (Figma: keine) {%- endcomment -%}
       {%- unless product.has_only_default_variant -%}
         <div class="cp__options">
           {%- for option in product.options_with_values -%}
@@ -126,7 +107,31 @@
           <path d="M2.5 3h2l2.2 12.3a1.5 1.5 0 0 0 1.5 1.2h8.8a1.5 1.5 0 0 0 1.5-1.2L21 7H6"/>
         </svg>
       </button>
-      <p class="cp__msg" data-msg hidden></p>
+    </div>
+  </div>
+
+  <div class="cp-toast" data-toast role="status" aria-live="polite" aria-hidden="true">
+    <span class="cp-toast__progress" data-toast-progress></span>
+    <button type="button" class="cp-toast__close" data-toast-close aria-label="Schließen">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="cp-toast__head">
+      <span class="cp-toast__check" aria-hidden="true">
+        <svg class="cp-toast__ico-ok" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        <svg class="cp-toast__ico-err" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 7v6M12 17h.01"/></svg>
+      </span>
+      <span class="cp-toast__head-text" data-toast-head>Zum Warenkorb hinzugefügt</span>
+    </div>
+    <div class="cp-toast__product">
+      <img class="cp-toast__img" data-toast-img alt="" width="56" height="56">
+      <div class="cp-toast__meta">
+        <p class="cp-toast__name" data-toast-name></p>
+        <p class="cp-toast__price" data-toast-price></p>
+      </div>
+    </div>
+    <div class="cp-toast__actions">
+      <a class="cp-toast__cart" data-toast-cart href="#">Warenkorb ansehen</a>
+      <button type="button" class="cp-toast__continue" data-toast-close>Weiter einkaufen</button>
     </div>
   </div>
 
@@ -135,8 +140,7 @@
 
 <style>
   #cp-{{ section.id }} {
-    /* === Design-Tokens: EXAKTE Hex-Werte aus Figma hier eintragen === */
-    --cp-green: #557A52;          /* Button, Sale-Preis, Punkt */
+    --cp-green: #557A52;
     --cp-green-hover: #46663F;
     --cp-text: #2b2b2b;
     --cp-muted: #6b7280;
@@ -152,17 +156,15 @@
   #cp-{{ section.id }} .cp__inner {
     max-width: var(--cp-max-width);
     margin: 0 auto;
-    padding: 0 24px;            /* gleicher Seitenabstand wie der Header */
+    padding: 0 24px;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--cp-gap);
     align-items: start;
   }
-  /* verhindert, dass ein breites Bild die Grid-Spalte aufbläht */
   #cp-{{ section.id }} .cp__media,
   #cp-{{ section.id }} .cp__info { min-width: 0; }
 
-  /* ---------- Gallery ---------- */
   #cp-{{ section.id }} .cp__media { display: flex; flex-direction: column; gap: 12px; }
   #cp-{{ section.id }} .cp__thumbs { display: flex; flex-direction: row; gap: 10px; order: 2; }
   #cp-{{ section.id }} .cp__thumb {
@@ -179,22 +181,20 @@
     border-radius: var(--cp-radius); overflow: hidden; border: 1px solid var(--cp-border);
     width: 100%;
   }
-  /* Solange Swiper noch nicht initialisiert ist: nur erstes Bild zeigen (kein Aufblähen) */
   #cp-{{ section.id }} .cp__main:not(.swiper-initialized) .swiper-wrapper { display: block; }
   #cp-{{ section.id }} .cp__main:not(.swiper-initialized) .swiper-slide:not(:first-child) { display: none; }
   #cp-{{ section.id }} .cp__main .swiper-slide img {
     width: 100%; height: auto; display: block; aspect-ratio: 1 / 1; object-fit: cover;
   }
-  #cp-{{ section.id }} .cp__arrows { display: flex; justify-content: center; gap: 28px; margin-top: 16px; }
+  #cp-{{ section.id }} .cp__arrows { display: flex; justify-content: center; gap: 0; margin-top: 6px; }
   #cp-{{ section.id }} .cp__arrow {
-    background: none; border: none; padding: 4px; cursor: pointer; color: #9a9a9a;
+    background: none; border: none; padding: 4px 1px; cursor: pointer; color: #111;
     display: inline-flex; align-items: center; justify-content: center; transition: color .15s;
   }
-  #cp-{{ section.id }} .cp__arrow svg { width: 30px; height: 30px; }
-  #cp-{{ section.id }} .cp__arrow:hover { color: var(--cp-text); }
-  #cp-{{ section.id }} .cp__arrow.swiper-button-disabled { opacity: .3; cursor: default; }
+  #cp-{{ section.id }} .cp__arrow svg { width: 36px; height: 36px; }
+  #cp-{{ section.id }} .cp__arrow:hover { color: #000; }
+  #cp-{{ section.id }} .cp__arrow.swiper-button-disabled { color: #cfcfcf; opacity: 1; cursor: default; }
 
-  /* ---------- Info ---------- */
   #cp-{{ section.id }} .cp__title { font-size: 34px; line-height: 1.1; margin: 0 0 6px; font-weight: 700; }
   #cp-{{ section.id }} .cp__subtitle { color: var(--cp-muted); font-size: 16px; font-weight: 400; margin: 0 0 22px; }
 
@@ -214,7 +214,7 @@
   }
   #cp-{{ section.id }} .cp__swatch.is-selected { border-color: var(--cp-green); background: var(--cp-green); color: #fff; }
 
-  #cp-{{ section.id }} .cp__availability { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 400; color: var(--cp-green); margin-bottom: 22px; }
+  #cp-{{ section.id }} .cp__availability { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 400; color: var(--cp-green); margin-bottom: 12px; }
   #cp-{{ section.id }} .cp__dot { width: 9px; height: 9px; border-radius: 50%; background: var(--cp-green); flex: 0 0 auto; }
   #cp-{{ section.id }} .cp__dot.is-out { background: #b91c1c; }
 
@@ -226,11 +226,89 @@
   #cp-{{ section.id }} .cp__atc:hover { background: var(--cp-green-hover); }
   #cp-{{ section.id }} .cp__atc:disabled { opacity: .5; cursor: not-allowed; }
 
-  #cp-{{ section.id }} .cp__msg { margin-top: 12px; font-size: 14px; }
-  #cp-{{ section.id }} .cp__msg.is-success { color: var(--cp-green); }
-  #cp-{{ section.id }} .cp__msg.is-error { color: #b91c1c; }
+  #cp-{{ section.id }} .cp-toast {
+    position: fixed; top: 20px; right: 20px; z-index: 9999;
+    width: 360px; max-width: calc(100vw - 32px);
+    background: #fff; border: 1px solid var(--cp-border); border-radius: 16px;
+    box-shadow: 0 18px 50px -12px rgba(16, 24, 40, .28), 0 4px 12px -6px rgba(16, 24, 40, .14);
+    padding: 18px 18px 16px; overflow: hidden; font-family: inherit;
+    opacity: 0; transform: translateX(115%) scale(.98); pointer-events: none;
+    transition: opacity .35s ease, transform .45s cubic-bezier(.16, 1, .3, 1);
+  }
+  #cp-{{ section.id }} .cp-toast.is-visible { opacity: 1; transform: translateX(0) scale(1); pointer-events: auto; }
+  #cp-{{ section.id }} .cp-toast.is-error { border-color: #f1c4c4; }
+  #cp-{{ section.id }} .cp-toast.is-error .cp-toast__product,
+  #cp-{{ section.id }} .cp-toast.is-error .cp-toast__actions { display: none; }
 
-  /* ---------- Desktop ---------- */
+  #cp-{{ section.id }} .cp-toast__progress {
+    position: absolute; left: 0; bottom: 0; height: 3px; width: 100%;
+    background: var(--cp-green); transform-origin: left; transform: scaleX(1);
+  }
+  #cp-{{ section.id }} .cp-toast.is-counting .cp-toast__progress {
+    transform: scaleX(0); transition: transform var(--toast-duration, 4000ms) linear;
+  }
+
+  #cp-{{ section.id }} .cp-toast__close {
+    position: absolute; top: 12px; right: 12px; width: 26px; height: 26px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: none; border: none; border-radius: 50%; color: var(--cp-muted); cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  #cp-{{ section.id }} .cp-toast__close:hover { background: #f3f4f6; color: var(--cp-text); }
+
+  #cp-{{ section.id }} .cp-toast__head { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; padding-right: 26px; }
+  #cp-{{ section.id }} .cp-toast__check {
+    flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--cp-green); color: #fff; display: inline-flex; align-items: center; justify-content: center;
+  }
+  #cp-{{ section.id }} .cp-toast.is-visible .cp-toast__check { animation: cp-pop .45s cubic-bezier(.16, 1, .3, 1) both; }
+  #cp-{{ section.id }} .cp-toast.is-error .cp-toast__check { background: #b91c1c; }
+  #cp-{{ section.id }} .cp-toast__ico-err { display: none; }
+  #cp-{{ section.id }} .cp-toast.is-error .cp-toast__ico-ok { display: none; }
+  #cp-{{ section.id }} .cp-toast.is-error .cp-toast__ico-err { display: inline; }
+  #cp-{{ section.id }} .cp-toast__head-text { font-size: 15px; font-weight: 700; color: var(--cp-text); }
+
+  #cp-{{ section.id }} .cp-toast__product { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  #cp-{{ section.id }} .cp-toast__img {
+    flex: 0 0 auto; width: 56px; height: 56px; border-radius: 10px; object-fit: cover;
+    border: 1px solid var(--cp-border); background: #f8f8f8;
+  }
+  #cp-{{ section.id }} .cp-toast__meta { min-width: 0; }
+  #cp-{{ section.id }} .cp-toast__name {
+    margin: 0 0 2px; font-size: 14px; font-weight: 600; color: var(--cp-text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  #cp-{{ section.id }} .cp-toast__price { margin: 0; font-size: 14px; font-weight: 700; color: var(--cp-green); }
+
+  #cp-{{ section.id }} .cp-toast__actions { display: flex; gap: 8px; }
+  #cp-{{ section.id }} .cp-toast__cart {
+    flex: 1; text-align: center; padding: 11px 14px; border-radius: 10px;
+    background: var(--cp-green); color: #fff; font-size: 14px; font-weight: 700;
+    text-decoration: none; transition: background .15s;
+  }
+  #cp-{{ section.id }} .cp-toast__cart:hover { background: var(--cp-green-hover); }
+  #cp-{{ section.id }} .cp-toast__continue {
+    flex: 0 0 auto; padding: 11px 14px; border-radius: 10px; border: 1px solid var(--cp-border);
+    background: #fff; color: var(--cp-text); font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  #cp-{{ section.id }} .cp-toast__continue:hover { background: #f3f4f6; }
+
+  @keyframes cp-pop {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  @media (max-width: 749px) {
+    #cp-{{ section.id }} .cp-toast { top: 12px; right: 12px; left: 12px; width: auto; transform: translateY(-120%) scale(.98); }
+    #cp-{{ section.id }} .cp-toast.is-visible { transform: translateY(0) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #cp-{{ section.id }} .cp-toast,
+    #cp-{{ section.id }} .cp-toast.is-visible { transform: none; transition: opacity .2s ease; }
+    #cp-{{ section.id }} .cp-toast.is-visible .cp-toast__check { animation: none; }
+  }
+
   @media (min-width: 750px) {
     #cp-{{ section.id }} .cp__media { flex-direction: row; gap: 14px; }
     #cp-{{ section.id }} .cp__thumbs { order: 0; flex-direction: column; width: 76px; flex: 0 0 76px; }
@@ -240,11 +318,11 @@
     #cp-{{ section.id }} .cp__inner { grid-template-columns: 1fr; gap: 26px; padding: 0 18px; }
     #cp-{{ section.id }} .cp__title { font-size: 27px; }
     #cp-{{ section.id }} .cp__thumb { width: 64px; height: 64px; }
-    /* Galerie randlos bis zum Viewport (Vor-/Nachbar-Bild bis zum Rand) */
     #cp-{{ section.id }} .cp__main-wrap { margin-left: -18px; margin-right: -18px; }
     #cp-{{ section.id }} .cp__main { border: none; border-radius: 0; }
-    /* keine Chevrons auf Mobile -> Wischen mit dem Finger */
     #cp-{{ section.id }} .cp__arrows { display: none; }
+    #cp-{{ section.id }} .cp__main .swiper-slide-prev img { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+    #cp-{{ section.id }} .cp__main .swiper-slide-next img { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
   }
 </style>
 
@@ -265,7 +343,6 @@
       return moneyFormat.replace(/\{\{\s*amount[^}]*\}\}/, withDots + ',' + value[1]);
     }
 
-    /* ---- Varianten (falls vorhanden) ---- */
     var selected = [];
     root.querySelectorAll('[data-option-index]').forEach(function (group) {
       var idx = parseInt(group.dataset.optionIndex, 10);
@@ -317,12 +394,55 @@
       }
     }
 
-    /* ---- Add to Cart ---- */
-    var msg = root.querySelector('[data-msg]');
-    function showMsg(text, isError) {
-      msg.textContent = text; msg.hidden = false;
-      msg.className = 'cp__msg ' + (isError ? 'is-error' : 'is-success');
+    var toast = root.querySelector('[data-toast]');
+    var toastProgress = toast.querySelector('[data-toast-progress]');
+    var toastHead = toast.querySelector('[data-toast-head]');
+    var toastImg = toast.querySelector('[data-toast-img]');
+    var toastName = toast.querySelector('[data-toast-name]');
+    var toastPrice = toast.querySelector('[data-toast-price]');
+    var toastCart = toast.querySelector('[data-toast-cart]');
+    var productTitle = (root.querySelector('.cp__title') ? root.querySelector('.cp__title').textContent : '').trim();
+    var toastTimer = null;
+    toastCart.setAttribute('href', routeRoot + 'cart');
+
+    toast.querySelectorAll('[data-toast-close]').forEach(function (btn) {
+      btn.addEventListener('click', hideToast);
+    });
+
+    function hideToast() {
+      clearTimeout(toastTimer);
+      toast.classList.remove('is-visible', 'is-counting');
+      toast.setAttribute('aria-hidden', 'true');
     }
+
+    function currentImage() {
+      var img = root.querySelector('.cp__main .swiper-slide-active img') ||
+                root.querySelector('.cp__main .swiper-slide img') ||
+                root.querySelector('.cp__main img');
+      if (!img) return '';
+      return img.currentSrc || img.src || '';
+    }
+
+    function showToast(opts) {
+      clearTimeout(toastTimer);
+      toast.classList.toggle('is-error', !!opts.isError);
+      toastHead.textContent = opts.head;
+      toastName.textContent = opts.name || '';
+      toastPrice.textContent = opts.price || '';
+      if (opts.img) { toastImg.src = opts.img; toastImg.style.display = ''; }
+      else { toastImg.removeAttribute('src'); toastImg.style.display = 'none'; }
+
+      var duration = opts.isError ? 5000 : 4000;
+      toast.style.setProperty('--toast-duration', duration + 'ms');
+
+      toast.classList.remove('is-counting');
+      void toast.offsetWidth; /* Reflow erzwingen, damit Slide-in und Fortschrittsbalken neu starten */
+      toast.classList.add('is-visible');
+      toast.setAttribute('aria-hidden', 'false');
+      requestAnimationFrame(function () { toast.classList.add('is-counting'); });
+      toastTimer = setTimeout(hideToast, duration);
+    }
+
     atc.addEventListener('click', function () {
       if (!currentVariant || !currentVariant.available) return;
       atc.disabled = true; atcText.textContent = 'Wird hinzugefügt …';
@@ -335,8 +455,18 @@
           if (!res.ok) return res.json().then(function (e) { throw new Error(e.description || 'Fehler beim Hinzufügen'); });
           return res.json();
         })
-        .then(function () { showMsg('Zum Warenkorb hinzugefügt ✓', false); return updateCartCount(); })
-        .catch(function (err) { showMsg(err.message, true); })
+        .then(function () {
+          showToast({
+            head: 'Zum Warenkorb hinzugefügt',
+            name: productTitle,
+            price: formatMoney(currentVariant.price),
+            img: currentImage()
+          });
+          return updateCartCount();
+        })
+        .catch(function (err) {
+          showToast({ head: err.message || 'Etwas ist schiefgelaufen', isError: true });
+        })
         .finally(function () { updateVariant(true); });
     });
 
@@ -348,34 +478,50 @@
       }).catch(function () {});
     }
 
-    /* ---- Swiper Gallery ---- */
-    function initSwiper() {
-      var slideCount = root.querySelectorAll('.cp__main .swiper-slide').length;
-      var useLoop = slideCount > 1;
-      var mainSwiper = new Swiper(root.querySelector('.cp__main'), {
-        speed: 400,
-        loop: useLoop,
-        keyboard: { enabled: true },
-        navigation: { nextEl: root.querySelector('.cp__next'), prevEl: root.querySelector('.cp__prev') },
-        breakpoints: {
-          /* Mobile: aktuelles Bild zentriert, Vor-/Nachbar links & rechts bis zum Rand angeschnitten */
-          0:   { slidesPerView: 1.12, spaceBetween: 12, centeredSlides: true },
-          /* Desktop: ein Bild voll */
-          750: { slidesPerView: 1,    spaceBetween: 0,  centeredSlides: false }
-        }
+    var mainSwiper = null;
+    var mq = window.matchMedia('(max-width: 749px)');
+    var thumbs = root.querySelectorAll('.cp__thumb');
+
+    thumbs.forEach(function (t) {
+      t.addEventListener('click', function () {
+        if (!mainSwiper) return;
+        var i = parseInt(t.dataset.index, 10);
+        if (mainSwiper.params.loop) mainSwiper.slideToLoop(i); else mainSwiper.slideTo(i);
       });
-      var thumbs = root.querySelectorAll('.cp__thumb');
+    });
+    function syncThumbs(active) {
       thumbs.forEach(function (t) {
-        t.addEventListener('click', function () {
-          var i = parseInt(t.dataset.index, 10);
-          if (useLoop) mainSwiper.slideToLoop(i); else mainSwiper.slideTo(i);
-        });
+        t.classList.toggle('is-active', parseInt(t.dataset.index, 10) === active);
+      });
+    }
+
+    function buildSwiper() {
+      var isMobile = mq.matches;
+      var slideCount = root.querySelectorAll('.cp__main .swiper-slide').length;
+      mainSwiper = new Swiper(root.querySelector('.cp__main'), {
+        speed: 400,
+        loop: isMobile && slideCount > 1, /* nur Mobile loopt (beidseitiges Peek); Desktop ohne Loop, damit die Pfeile an den Enden ausgrauen */
+        centeredSlides: isMobile,
+        slidesPerView: isMobile ? 1.12 : 1,
+        spaceBetween: isMobile ? 12 : 0,
+        keyboard: { enabled: true },
+        navigation: { nextEl: root.querySelector('.cp__next'), prevEl: root.querySelector('.cp__prev') }
       });
       mainSwiper.on('slideChange', function () {
-        var active = useLoop ? mainSwiper.realIndex : mainSwiper.activeIndex;
-        thumbs.forEach(function (t) {
-          t.classList.toggle('is-active', parseInt(t.dataset.index, 10) === active);
-        });
+        syncThumbs(mainSwiper.params.loop ? mainSwiper.realIndex : mainSwiper.activeIndex);
+      });
+    }
+
+    function initSwiper() {
+      buildSwiper();
+      var wasMobile = mq.matches;
+      window.addEventListener('resize', function () {
+        var nowMobile = mq.matches;
+        if (nowMobile !== wasMobile) {
+          wasMobile = nowMobile;
+          if (mainSwiper) mainSwiper.destroy(true, true);
+          buildSwiper();
+        }
       });
     }
     function waitForSwiper() { if (window.Swiper) initSwiper(); else setTimeout(waitForSwiper, 50); }
